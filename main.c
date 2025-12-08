@@ -22,11 +22,11 @@ void calculateLayer5(float* Layer4_Neurons_CPU, float* Layer4_Weights_CPU, doubl
 
 void InitHostMem(float *Layer1_Weights_CPU,float *Layer2_Weights_CPU, float *Layer3_Weights_CPU,float *Layer4_Weights_CPU);
 
-static uint64_t myTimer1 = 0;
-static uint64_t myTimer2 = 0;
-static uint64_t myTimer3 = 0;
-static uint64_t myTimer4 = 0;
-static uint64_t myTimer5 = 0;
+static double myTimer1 = 0;
+static double myTimer2 = 0;
+static double myTimer3 = 0;
+static double myTimer4 = 0;
+static double myTimer5 = 0;
 
 int main(int argc, char** argv){
 
@@ -150,7 +150,7 @@ int main(int argc, char** argv){
 
     InitHostMem(Layer1_Weights_CPU,Layer2_Weights_CPU,Layer3_Weights_CPU,Layer4_Weights_CPU);
 
-    uint64_t global_timer = -(uint64_t)(i64cycle());
+    double global_timer = -dtime();
 
     int ITER = 100;
     for (int iter=0; iter < ITER; iter++) {
@@ -176,14 +176,14 @@ int main(int argc, char** argv){
         printf("Le resultat est : %d \n",indexmax);
     }
 
-    global_timer += (uint64_t)(i64cycle());
+    global_timer += dtime();
 
-    printf("total: %.4f\n", (float)global_timer / (float)ITER);
-    printf("layer 1: %.4f\n", (float)myTimer1 / (float)ITER);
-    printf("layer 2: %.4f\n", (float)myTimer2 / (float)ITER);
-    printf("layer 3: %.4f\n", (float)myTimer3 / (float)ITER);
-    printf("layer 4: %.4f\n", (float)myTimer4 / (float)ITER);
-    printf("layer 5: %.4f\n", (float)myTimer5 / (float)ITER);
+    printf("total: %.6f\n", global_timer);
+    printf("layer 1: %.6f\n", myTimer1);
+    printf("layer 2: %.6f\n", myTimer2);
+    printf("layer 3: %.6f\n", myTimer3);
+    printf("layer 4: %.6f\n", myTimer4);
+    printf("layer 5: %.6f\n", myTimer5);
 
     return 0;
 }
@@ -192,14 +192,14 @@ int main(int argc, char** argv){
 
 
 void calculateLayer1(float* input, float* Layer1_Neurons_CPU){
-    myTimer1 -= (uint64_t)(i64cycle());
+    myTimer1 -= dtime();
     memcpy(Layer1_Neurons_CPU, input, IMGWIDTH*IMGHEIGHT*sizeof(float));
-    myTimer1 += (uint64_t)(i64cycle());
+    myTimer1 += dtime();
 }
 
 void calculateLayer2(float* Layer1_Neurons_CPU, float* Layer1_Weights_CPU, float* Layer2_Neurons_CPU){
     float somme;
-    myTimer2 -= (uint64_t)(i64cycle());
+    myTimer2 -= dtime();
     int i,j,k,m,n;
     for(i=0;i<6;i++)
         for(j=0;j<13;j++)
@@ -210,12 +210,12 @@ void calculateLayer2(float* Layer1_Neurons_CPU, float* Layer1_Weights_CPU, float
                         somme += Layer1_Weights_CPU[26*i+5*m+n+1] * Layer1_Neurons_CPU[29*(m+2*j)+n+2*k];
                 Layer2_Neurons_CPU[13*13*i+13*j+k] = (float) SIGMOID(somme);
             }
-    myTimer2 += (uint64_t)(i64cycle());
+    myTimer2 += dtime();
 }
 
 void calculateLayer3(float* Layer2_Neurons_CPU, float* Layer2_Weights_CPU, float* Layer3_Neurons_CPU){
     float somme;
-    myTimer3 -= (uint64_t)(i64cycle());
+    myTimer3 -= dtime();
     int i,j,k,m,n;
     //for( i=0;i<50;i++)
     //    for(j=0;j<5;j++)
@@ -274,12 +274,12 @@ void calculateLayer3(float* Layer2_Neurons_CPU, float* Layer2_Weights_CPU, float
             for(int k=0;k<5;k++)
                 Layer3_Neurons_CPU[5*5*filter+5*j+k] =
                   (float) SIGMOID(Layer2_Weights_CPU[26*6*filter] + M3[filter][5*j+k]);
-    myTimer3 += (uint64_t)(i64cycle());
+    myTimer3 += dtime();
 }
 
 void calculateLayer4(float* Layer3_Neurons_CPU, float* Layer3_Weights_CPU, float* Layer4_Neurons_CPU){
     float somme;
-    myTimer4 -= (uint64_t)(i64cycle());
+    myTimer4 -= dtime();
     int i, j, k, m;
     for( i=0;i<100;i++){
         somme = Layer3_Weights_CPU[i*(1+50*25)];
@@ -289,12 +289,12 @@ void calculateLayer4(float* Layer3_Neurons_CPU, float* Layer3_Weights_CPU, float
         Layer4_Neurons_CPU[i] = (float) SIGMOID(somme);
     }
 
-    myTimer4 += (uint64_t)(i64cycle());
+    myTimer4 += dtime();
 }
 
 void calculateLayer5(float* Layer4_Neurons_CPU, float* Layer4_Weights_CPU, double* Layer5_Neurons_CPU){
     float somme;
-    myTimer5 -= (uint64_t)(i64cycle());
+    myTimer5 -= dtime();
     int i, j;
     for( i=0;i<10;i++){
         somme = Layer4_Weights_CPU[101*i];
@@ -302,6 +302,6 @@ void calculateLayer5(float* Layer4_Neurons_CPU, float* Layer4_Weights_CPU, doubl
             somme += Layer4_Weights_CPU[1+101*i+j] * Layer4_Neurons_CPU[j];
         Layer5_Neurons_CPU[i] = SIGMOID(somme);
     }
-    myTimer5 += (uint64_t)(i64cycle());
+    myTimer5 += dtime();
 }
 
