@@ -7,6 +7,8 @@
 #include <stdint.h>
 #include "timers_b.h"
 
+#include "arm_neon.h"
+
 #define IMGWIDTH 29
 #define IMGHEIGHT 29
 #define tour 10000
@@ -252,8 +254,9 @@ void calculateLayer3(float* Layer2_Neurons_CPU, float* Layer2_Weights_CPU, float
     int K = 5*5;
 
     convolutionTimer3 -= dtime();
+
     // Initialize first matrix
-    float M1[50][5*5*6];
+    float M1[52][152] = {{0}};
     for (int filter=0; filter < 50; filter++)
       for (int channel=0; channel < 6; channel++)
         for (int m=0; m < 5; m++)
@@ -261,7 +264,7 @@ void calculateLayer3(float* Layer2_Neurons_CPU, float* Layer2_Weights_CPU, float
             M1[filter][25*channel+5*m+n] = Layer2_Weights_CPU[26*6*filter+1+6*(n+5*m)+channel];
 
     // Initialize second matrix
-    float M2[5*5*6][5*5];
+    float M2[152][28] = {{0}};
     for (int channel=0; channel < 6; channel++)
       for (int j=0; j < 5; j++)
         for (int k=0; k < 5; k++)
@@ -270,16 +273,43 @@ void calculateLayer3(float* Layer2_Neurons_CPU, float* Layer2_Weights_CPU, float
               M2[25*channel+5*m+n][5*j+k] = Layer2_Neurons_CPU[13*13*channel+13*(2*j+m)+2*k+n];
 
     // Zero result matrix
-    float M3[50][5*5];
-    for (int a=0; a < N; a++)
-      for (int b=0; b < K; b++)
-        M3[a][b] = 0.0;
+    float M3[52][28] = {{0}};
 
     // Perform matrix product
-    for (int a=0; a < N; a++)
-      for (int c=0; c < M; c++)
-        for (int b=0; b < K; b++)
-          M3[a][b] += M1[a][c] * M2[c][b];
+    //for (int a=0; a < N; a++)
+    //  for (int b=0; b < K; b++)
+    //    for (int c=0; c < M; c++)
+    //      M3[a][b] += M1[a][c] * M2[c][b];
+
+    for (int a=0; a < 52; a++) {
+      for (int c=0; c < 152; c += 4) {
+        float32x4_t A0 = vmovq_n_f32(M1[a][c+0]);
+        float32x4_t A1 = vmovq_n_f32(M1[a][c+1]);
+        float32x4_t A2 = vmovq_n_f32(M1[a][c+2]);
+        float32x4_t A3 = vmovq_n_f32(M1[a][c+3]);
+
+        for (int b=0; b < 28; b += 4)
+        {
+          //for (int j=b; j < b+4; j++)
+          //  for (int k=c; k < c+4; k++)
+          //    M3[a][j] += M1[a][k] * M2[k][j];
+
+          float32x4_t B0 = vld1q_f32(&M2[c+0][b]);
+          float32x4_t B1 = vld1q_f32(&M2[c+1][b]);
+          float32x4_t B2 = vld1q_f32(&M2[c+2][b]);
+          float32x4_t B3 = vld1q_f32(&M2[c+3][b]);
+
+          float32x4_t C0 = vld1q_f32(&M3[a][b]);
+          float32x4_t C1 = vmulq_f32(A0, B0);
+          float32x4_t C2 = vmulq_f32(A1, B1);
+          float32x4_t C3 = vmulq_f32(A2, B2);
+          float32x4_t C4 = vmulq_f32(A3, B3);
+          C0 =
+            vaddq_f32(vaddq_f32(vaddq_f32(C0,C1),C2), vaddq_f32(C3,C4));
+          vst1q_f32(&M3[a][b], C0);
+        }
+      }
+    }
     convolutionTimer3 += dtime();
 
     sigmoidTimer3 -= dtime();
