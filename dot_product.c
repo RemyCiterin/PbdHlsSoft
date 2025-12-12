@@ -44,6 +44,8 @@ int main() {
 
   cfg = mmap(NULL, sysconf(_SC_PAGESIZE * 4), PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0x40000000);
 
+  printf("mmap done\n");
+
   ex.Control_BaseAddress = cfg;
   ex.IsReady = 1;
 
@@ -53,21 +55,28 @@ int main() {
   float B[50];
   for (int i=0; i < 50; i++) B[i] = 1;
 
+  printf("wait for idle_o to be set to 1\n");
   while (XMk_dot_product_Get_Idle_o(&ex) == 0) {}
+  printf("set idle_i to 1\n");
   XMk_dot_product_Set_Idle_i(&ex, 1);
 
+  printf("load data\n");
   XMk_dot_product_Set_OffsetA(&ex, 0);
   XMk_dot_product_Set_OffsetB(&ex, 50);
   XMk_dot_product_Write_Buff_Words(&ex, 0, (word_type*)(&A[0]), 50);
   XMk_dot_product_Write_Buff_Words(&ex, 50, (word_type*)(&B[0]), 50);
 
+  printf("set idle_i to 1\n");
   XMk_dot_product_Set_Idle_i(&ex, 0);
 
+  printf("wait for Idle_o to be valid\n");
   while (!XMk_dot_product_Get_Idle_o_vld(&ex)) {}
+  printf("wait for idle_o to be 1\n");
   while (XMk_dot_product_Get_Idle_o(&ex) == 0) {
     printf("Wait\n");
   }
 
+  printf("wait for result to be valid\n");
   while (!XMk_dot_product_Get_Result_vld(&ex)) {}
 
   for (int i=0; i < 1000; i++) {
