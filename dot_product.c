@@ -62,9 +62,13 @@ int main() {
   XMk_dot_product_Write_Buff_Words(&ex, 50, (word_type*)(&B[0]), 50);
 
   XMk_dot_product_Set_Idle_i(&ex, 0);
+
+  while (!XMk_dot_product_Get_Idle_o_vld(&ex)) {}
   while (XMk_dot_product_Get_Idle_o(&ex) == 0) {
     printf("Wait\n");
   }
+
+  while (!XMk_dot_product_Get_Result_vld(&ex)) {}
 
   for (int i=0; i < 1000; i++) {
     int c = XMk_dot_product_Get_Result(&ex);
