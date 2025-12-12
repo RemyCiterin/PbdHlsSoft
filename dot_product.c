@@ -67,7 +67,7 @@ int main() {
   XMk_dot_product_Write_Buff_Words(&ex, 50, (word_type*)(&B[0]), 50);
 
   float C[50];
-  XMk_dot_product_Read_Buff_Words(&ex, 0, (word_type*)(&C[0]), 50);
+  XMk_dot_product_Read_Buff_Words(&ex, 50, (word_type*)(&C[0]), 50);
   for (int i=0; i < 50; i++) printf("C[%d] = %f\n", i, C[i]);
 
   printf("set idle_i to 1\n");
