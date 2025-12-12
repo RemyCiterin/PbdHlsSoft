@@ -42,7 +42,7 @@ int main() {
     return EXIT_FAILURE;
   }
 
-  cfg = mmap(NULL, sysconf(_SC_PAGESIZE * 4), PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0x40000000);
+  cfg = mmap(NULL, 4096*16, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0x40000000);
 
   printf("mmap done\n");
 
