@@ -53,6 +53,9 @@ int main() {
   float B[50];
   for (int i=0; i < 50; i++) B[i] = 1;
 
+  while (XMk_dot_product_Get_Idle_o(&ex) == 0) {}
+  XMk_dot_product_Set_Idle_i(&ex, 1);
+
   XMk_dot_product_Set_OffsetA(&ex, 0);
   XMk_dot_product_Set_OffsetB(&ex, 50);
   XMk_dot_product_Write_Buff_Words(&ex, 0, (word_type*)(&A[0]), 50);
