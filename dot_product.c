@@ -61,9 +61,11 @@ int main() {
   XMk_dot_product_Set_Idle_i(&ex, 0);
   while (XMk_dot_product_Get_Idle_o(&ex) == 0) {}
 
-  int c = XMk_dot_product_Get_Result(&ex);
-  float C = *(float*)(&c);
-  printf("Result: %f\n", C);
+  for (int i=0; i < 100; i++) {
+    int c = XMk_dot_product_Get_Result(&ex);
+    float C = *(float*)(&c);
+    printf("Result: %f\n", C);
+  }
 
   return 0;
 }
