@@ -5,5 +5,10 @@ build:
 		-mfpu=neon -I. -o main -lm -O3
 	./main
 
+.PHONY: dot_product
+dot_product:
+	gcc dot_product.c xmk_dot_product.c -I. -o dot_product
+	./dot_product
+
 clean:
 	@rm -f main
