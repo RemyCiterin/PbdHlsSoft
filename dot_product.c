@@ -63,7 +63,7 @@ int main() {
 
   int c = XMk_dot_product_Get_Result(&ex);
   float C = *(float*)(&c);
-  printf("valid: %d C: %f\n", valid, C);
+  printf("Result: %f\n", C);
 
   return 0;
 }
