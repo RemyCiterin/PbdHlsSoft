@@ -66,6 +66,10 @@ int main() {
   XMk_dot_product_Write_Buff_Words(&ex, 0, (word_type*)(&A[0]), 50);
   XMk_dot_product_Write_Buff_Words(&ex, 50, (word_type*)(&B[0]), 50);
 
+  float C[50];
+  XMk_dot_product_Read_Buff_Words(&ex, 0, (word_type*)(&C[0]), 50);
+  for (int i=0; i < 50; i++) printf("C[%d] = %f\n", i, C[i]);
+
   printf("set idle_i to 1\n");
   XMk_dot_product_Set_Idle_i(&ex, 0);
 
@@ -79,7 +83,7 @@ int main() {
   //printf("wait for result to be valid\n");
   //while (!XMk_dot_product_Get_Result_vld(&ex)) {}
 
-  for (int i=0; i < 1000; i++) {
+  for (int i=0; i < 100; i++) {
     int c = XMk_dot_product_Get_Result(&ex);
     float C = *(float*)(&c);
     printf("Result: %f\n", C);
