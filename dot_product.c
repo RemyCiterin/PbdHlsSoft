@@ -55,9 +55,9 @@ int main() {
   float B[50];
   for (int i=0; i < 50; i++) B[i] = 1;
 
-  printf("wait for idle_o to be set to 1\n");
-  while (XMk_dot_product_Get_Idle_o(&ex) == 0) {}
-  printf("set idle_i to 1\n");
+  //printf("wait for idle_o to be set to 1\n");
+  //while (XMk_dot_product_Get_Idle_o(&ex) == 0) {}
+  //printf("set idle_i to 1\n");
   XMk_dot_product_Set_Idle_i(&ex, 1);
 
   printf("load data\n");
@@ -69,15 +69,15 @@ int main() {
   printf("set idle_i to 1\n");
   XMk_dot_product_Set_Idle_i(&ex, 0);
 
-  printf("wait for Idle_o to be valid\n");
-  while (!XMk_dot_product_Get_Idle_o_vld(&ex)) {}
-  printf("wait for idle_o to be 1\n");
-  while (XMk_dot_product_Get_Idle_o(&ex) == 0) {
-    printf("Wait\n");
-  }
+  //printf("wait for Idle_o to be valid\n");
+  //while (!XMk_dot_product_Get_Idle_o_vld(&ex)) {}
+  //printf("wait for idle_o to be 1\n");
+  //while (XMk_dot_product_Get_Idle_o(&ex) == 0) {
+  //  printf("Wait\n");
+  //}
 
-  printf("wait for result to be valid\n");
-  while (!XMk_dot_product_Get_Result_vld(&ex)) {}
+  //printf("wait for result to be valid\n");
+  //while (!XMk_dot_product_Get_Result_vld(&ex)) {}
 
   for (int i=0; i < 1000; i++) {
     int c = XMk_dot_product_Get_Result(&ex);
