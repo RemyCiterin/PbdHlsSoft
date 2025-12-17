@@ -359,15 +359,23 @@ void calculateLayer4(float* Layer3_Neurons_CPU, float* Layer3_Weights_CPU, float
     int i, j, k, m;
     productTimer4 -= dtime();
     for( i=0;i<100;i++){
+        int j = 0;
+        float somme = Layer3_Weights_CPU[i*(1+50*25)];
+
         float32x4_t acc = vmovq_n_f32(0.0);
-        for (int j=0; j < 1250; j += 4) {
-          float32x4_t lhs = vld1q_f32(&Layer3_Weights_CPU[i*(1+50*25)+1 + j]);
-          float32x4_t rhs = vld1q_f32(&Layer3_Neurons_CPU[j]);
-          acc = vaddq_f32(acc, vmulq_f32(lhs, rhs));
+        for (j=0; j < 1248; j += 4) {
+          float32x4_t tmp1 = vld1q_f32(&Layer3_Weights_CPU[i*(1+50*25)+1 + j]);
+          float32x4_t tmp2 = vld1q_f32(&Layer3_Neurons_CPU[j]);
+          acc = vaddq_f32(acc, vmulq_f32(tmp1, tmp2));
         }
 
-        Layer4_Neurons_CPU[i] =
-          Layer3_Weights_CPU[i*(1+50*25)] +
+        for (; j < 1250; j++) {
+          float lhs = Layer3_Weights_CPU[i*(1+50*25)+1 + j];
+          float rhs = Layer3_Neurons_CPU[j];
+          somme += lhs * rhs;
+        }
+
+        Layer4_Neurons_CPU[i] = somme +
           vgetq_lane_f32(acc,0) +
           vgetq_lane_f32(acc,1) +
           vgetq_lane_f32(acc,2) +
