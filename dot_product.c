@@ -84,7 +84,7 @@ int main() {
   int A[SIZE];
 
   float t1 = dtime();
-  for (int i=0; i < SIZE; i++) A[i] = 1 * 65536;
+  for (int i=0; i < SIZE; i++) A[i] = 1 * 6553;
   Write_Vector(&ex, 0, &A[0], SIZE);
 
   int ret;
