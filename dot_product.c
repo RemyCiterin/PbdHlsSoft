@@ -20,13 +20,13 @@ static inline void Write_Vector(XMk_dot_product* cfg, int offset, int* vector, i
   assert(offset % 4 == 0);
   assert(size % 4 == 0);
 
-  printf("Test1 offset: %d size: %d vector%x\n", offset, size, vector);
+  printf("Test1 offset: %d size: %d vector 0x%x\n", offset, size, vector);
   fflush(stdout);
 
-  XMk_dot_product_Write_Scratchpad_0_Words(cfg, offset / 4, (word_type*)(vector[0*size/4]), size / 4);
-  XMk_dot_product_Write_Scratchpad_1_Words(cfg, offset / 4, (word_type*)(vector[1*size/4]), size / 4);
-  XMk_dot_product_Write_Scratchpad_2_Words(cfg, offset / 4, (word_type*)(vector[2*size/4]), size / 4);
-  XMk_dot_product_Write_Scratchpad_3_Words(cfg, offset / 4, (word_type*)(vector[3*size/4]), size / 4);
+  XMk_dot_product_Write_Scratchpad_0_Words(cfg, offset / 4, (word_type*)(&vector[0*size/4]), size / 4);
+  XMk_dot_product_Write_Scratchpad_1_Words(cfg, offset / 4, (word_type*)(&vector[1*size/4]), size / 4);
+  XMk_dot_product_Write_Scratchpad_2_Words(cfg, offset / 4, (word_type*)(&vector[2*size/4]), size / 4);
+  XMk_dot_product_Write_Scratchpad_3_Words(cfg, offset / 4, (word_type*)(&vector[3*size/4]), size / 4);
   printf("Test2\n");
 }
 
