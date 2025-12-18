@@ -453,97 +453,382 @@ u32 XMk_dot_product_Read_Result_Bytes(XMk_dot_product *InstancePtr, int offset, 
     return length;
 }
 
-u32 XMk_dot_product_Get_Scratchpad_BaseAddress(XMk_dot_product *InstancePtr) {
+u32 XMk_dot_product_Get_Scratchpad_0_BaseAddress(XMk_dot_product *InstancePtr) {
     Xil_AssertNonvoid(InstancePtr != NULL);
     Xil_AssertNonvoid(InstancePtr->IsReady == XIL_COMPONENT_IS_READY);
 
-    return (InstancePtr->Control_BaseAddress + XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_BASE);
+    return (InstancePtr->Control_BaseAddress + XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_0_BASE);
 }
 
-u32 XMk_dot_product_Get_Scratchpad_HighAddress(XMk_dot_product *InstancePtr) {
+u32 XMk_dot_product_Get_Scratchpad_0_HighAddress(XMk_dot_product *InstancePtr) {
     Xil_AssertNonvoid(InstancePtr != NULL);
     Xil_AssertNonvoid(InstancePtr->IsReady == XIL_COMPONENT_IS_READY);
 
-    return (InstancePtr->Control_BaseAddress + XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_HIGH);
+    return (InstancePtr->Control_BaseAddress + XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_0_HIGH);
 }
 
-u32 XMk_dot_product_Get_Scratchpad_TotalBytes(XMk_dot_product *InstancePtr) {
+u32 XMk_dot_product_Get_Scratchpad_0_TotalBytes(XMk_dot_product *InstancePtr) {
     Xil_AssertNonvoid(InstancePtr != NULL);
     Xil_AssertNonvoid(InstancePtr->IsReady == XIL_COMPONENT_IS_READY);
 
-    return (XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_HIGH - XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_BASE + 1);
+    return (XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_0_HIGH - XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_0_BASE + 1);
 }
 
-u32 XMk_dot_product_Get_Scratchpad_BitWidth(XMk_dot_product *InstancePtr) {
+u32 XMk_dot_product_Get_Scratchpad_0_BitWidth(XMk_dot_product *InstancePtr) {
     Xil_AssertNonvoid(InstancePtr != NULL);
     Xil_AssertNonvoid(InstancePtr->IsReady == XIL_COMPONENT_IS_READY);
 
-    return XMK_DOT_PRODUCT_CONTROL_WIDTH_SCRATCHPAD;
+    return XMK_DOT_PRODUCT_CONTROL_WIDTH_SCRATCHPAD_0;
 }
 
-u32 XMk_dot_product_Get_Scratchpad_Depth(XMk_dot_product *InstancePtr) {
+u32 XMk_dot_product_Get_Scratchpad_0_Depth(XMk_dot_product *InstancePtr) {
     Xil_AssertNonvoid(InstancePtr != NULL);
     Xil_AssertNonvoid(InstancePtr->IsReady == XIL_COMPONENT_IS_READY);
 
-    return XMK_DOT_PRODUCT_CONTROL_DEPTH_SCRATCHPAD;
+    return XMK_DOT_PRODUCT_CONTROL_DEPTH_SCRATCHPAD_0;
 }
 
-u32 XMk_dot_product_Write_Scratchpad_Words(XMk_dot_product *InstancePtr, int offset, word_type *data, int length) {
+u32 XMk_dot_product_Write_Scratchpad_0_Words(XMk_dot_product *InstancePtr, int offset, word_type *data, int length) {
     Xil_AssertNonvoid(InstancePtr != NULL);
     Xil_AssertNonvoid(InstancePtr -> IsReady == XIL_COMPONENT_IS_READY);
 
     int i;
 
-    if ((offset + length)*4 > (XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_HIGH - XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_BASE + 1))
+    if ((offset + length)*4 > (XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_0_HIGH - XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_0_BASE + 1))
         return 0;
 
     for (i = 0; i < length; i++) {
-        *(int *)(InstancePtr->Control_BaseAddress + XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_BASE + (offset + i)*4) = *(data + i);
+        *(int *)(InstancePtr->Control_BaseAddress + XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_0_BASE + (offset + i)*4) = *(data + i);
     }
     return length;
 }
 
-u32 XMk_dot_product_Read_Scratchpad_Words(XMk_dot_product *InstancePtr, int offset, word_type *data, int length) {
+u32 XMk_dot_product_Read_Scratchpad_0_Words(XMk_dot_product *InstancePtr, int offset, word_type *data, int length) {
     Xil_AssertNonvoid(InstancePtr != NULL);
     Xil_AssertNonvoid(InstancePtr -> IsReady == XIL_COMPONENT_IS_READY);
 
     int i;
 
-    if ((offset + length)*4 > (XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_HIGH - XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_BASE + 1))
+    if ((offset + length)*4 > (XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_0_HIGH - XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_0_BASE + 1))
         return 0;
 
     for (i = 0; i < length; i++) {
-        *(data + i) = *(int *)(InstancePtr->Control_BaseAddress + XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_BASE + (offset + i)*4);
+        *(data + i) = *(int *)(InstancePtr->Control_BaseAddress + XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_0_BASE + (offset + i)*4);
     }
     return length;
 }
 
-u32 XMk_dot_product_Write_Scratchpad_Bytes(XMk_dot_product *InstancePtr, int offset, char *data, int length) {
+u32 XMk_dot_product_Write_Scratchpad_0_Bytes(XMk_dot_product *InstancePtr, int offset, char *data, int length) {
     Xil_AssertNonvoid(InstancePtr != NULL);
     Xil_AssertNonvoid(InstancePtr -> IsReady == XIL_COMPONENT_IS_READY);
 
     int i;
 
-    if ((offset + length) > (XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_HIGH - XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_BASE + 1))
+    if ((offset + length) > (XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_0_HIGH - XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_0_BASE + 1))
         return 0;
 
     for (i = 0; i < length; i++) {
-        *(char *)(InstancePtr->Control_BaseAddress + XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_BASE + offset + i) = *(data + i);
+        *(char *)(InstancePtr->Control_BaseAddress + XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_0_BASE + offset + i) = *(data + i);
     }
     return length;
 }
 
-u32 XMk_dot_product_Read_Scratchpad_Bytes(XMk_dot_product *InstancePtr, int offset, char *data, int length) {
+u32 XMk_dot_product_Read_Scratchpad_0_Bytes(XMk_dot_product *InstancePtr, int offset, char *data, int length) {
     Xil_AssertNonvoid(InstancePtr != NULL);
     Xil_AssertNonvoid(InstancePtr -> IsReady == XIL_COMPONENT_IS_READY);
 
     int i;
 
-    if ((offset + length) > (XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_HIGH - XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_BASE + 1))
+    if ((offset + length) > (XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_0_HIGH - XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_0_BASE + 1))
         return 0;
 
     for (i = 0; i < length; i++) {
-        *(data + i) = *(char *)(InstancePtr->Control_BaseAddress + XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_BASE + offset + i);
+        *(data + i) = *(char *)(InstancePtr->Control_BaseAddress + XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_0_BASE + offset + i);
+    }
+    return length;
+}
+
+u32 XMk_dot_product_Get_Scratchpad_1_BaseAddress(XMk_dot_product *InstancePtr) {
+    Xil_AssertNonvoid(InstancePtr != NULL);
+    Xil_AssertNonvoid(InstancePtr->IsReady == XIL_COMPONENT_IS_READY);
+
+    return (InstancePtr->Control_BaseAddress + XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_1_BASE);
+}
+
+u32 XMk_dot_product_Get_Scratchpad_1_HighAddress(XMk_dot_product *InstancePtr) {
+    Xil_AssertNonvoid(InstancePtr != NULL);
+    Xil_AssertNonvoid(InstancePtr->IsReady == XIL_COMPONENT_IS_READY);
+
+    return (InstancePtr->Control_BaseAddress + XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_1_HIGH);
+}
+
+u32 XMk_dot_product_Get_Scratchpad_1_TotalBytes(XMk_dot_product *InstancePtr) {
+    Xil_AssertNonvoid(InstancePtr != NULL);
+    Xil_AssertNonvoid(InstancePtr->IsReady == XIL_COMPONENT_IS_READY);
+
+    return (XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_1_HIGH - XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_1_BASE + 1);
+}
+
+u32 XMk_dot_product_Get_Scratchpad_1_BitWidth(XMk_dot_product *InstancePtr) {
+    Xil_AssertNonvoid(InstancePtr != NULL);
+    Xil_AssertNonvoid(InstancePtr->IsReady == XIL_COMPONENT_IS_READY);
+
+    return XMK_DOT_PRODUCT_CONTROL_WIDTH_SCRATCHPAD_1;
+}
+
+u32 XMk_dot_product_Get_Scratchpad_1_Depth(XMk_dot_product *InstancePtr) {
+    Xil_AssertNonvoid(InstancePtr != NULL);
+    Xil_AssertNonvoid(InstancePtr->IsReady == XIL_COMPONENT_IS_READY);
+
+    return XMK_DOT_PRODUCT_CONTROL_DEPTH_SCRATCHPAD_1;
+}
+
+u32 XMk_dot_product_Write_Scratchpad_1_Words(XMk_dot_product *InstancePtr, int offset, word_type *data, int length) {
+    Xil_AssertNonvoid(InstancePtr != NULL);
+    Xil_AssertNonvoid(InstancePtr -> IsReady == XIL_COMPONENT_IS_READY);
+
+    int i;
+
+    if ((offset + length)*4 > (XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_1_HIGH - XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_1_BASE + 1))
+        return 0;
+
+    for (i = 0; i < length; i++) {
+        *(int *)(InstancePtr->Control_BaseAddress + XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_1_BASE + (offset + i)*4) = *(data + i);
+    }
+    return length;
+}
+
+u32 XMk_dot_product_Read_Scratchpad_1_Words(XMk_dot_product *InstancePtr, int offset, word_type *data, int length) {
+    Xil_AssertNonvoid(InstancePtr != NULL);
+    Xil_AssertNonvoid(InstancePtr -> IsReady == XIL_COMPONENT_IS_READY);
+
+    int i;
+
+    if ((offset + length)*4 > (XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_1_HIGH - XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_1_BASE + 1))
+        return 0;
+
+    for (i = 0; i < length; i++) {
+        *(data + i) = *(int *)(InstancePtr->Control_BaseAddress + XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_1_BASE + (offset + i)*4);
+    }
+    return length;
+}
+
+u32 XMk_dot_product_Write_Scratchpad_1_Bytes(XMk_dot_product *InstancePtr, int offset, char *data, int length) {
+    Xil_AssertNonvoid(InstancePtr != NULL);
+    Xil_AssertNonvoid(InstancePtr -> IsReady == XIL_COMPONENT_IS_READY);
+
+    int i;
+
+    if ((offset + length) > (XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_1_HIGH - XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_1_BASE + 1))
+        return 0;
+
+    for (i = 0; i < length; i++) {
+        *(char *)(InstancePtr->Control_BaseAddress + XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_1_BASE + offset + i) = *(data + i);
+    }
+    return length;
+}
+
+u32 XMk_dot_product_Read_Scratchpad_1_Bytes(XMk_dot_product *InstancePtr, int offset, char *data, int length) {
+    Xil_AssertNonvoid(InstancePtr != NULL);
+    Xil_AssertNonvoid(InstancePtr -> IsReady == XIL_COMPONENT_IS_READY);
+
+    int i;
+
+    if ((offset + length) > (XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_1_HIGH - XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_1_BASE + 1))
+        return 0;
+
+    for (i = 0; i < length; i++) {
+        *(data + i) = *(char *)(InstancePtr->Control_BaseAddress + XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_1_BASE + offset + i);
+    }
+    return length;
+}
+
+u32 XMk_dot_product_Get_Scratchpad_2_BaseAddress(XMk_dot_product *InstancePtr) {
+    Xil_AssertNonvoid(InstancePtr != NULL);
+    Xil_AssertNonvoid(InstancePtr->IsReady == XIL_COMPONENT_IS_READY);
+
+    return (InstancePtr->Control_BaseAddress + XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_2_BASE);
+}
+
+u32 XMk_dot_product_Get_Scratchpad_2_HighAddress(XMk_dot_product *InstancePtr) {
+    Xil_AssertNonvoid(InstancePtr != NULL);
+    Xil_AssertNonvoid(InstancePtr->IsReady == XIL_COMPONENT_IS_READY);
+
+    return (InstancePtr->Control_BaseAddress + XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_2_HIGH);
+}
+
+u32 XMk_dot_product_Get_Scratchpad_2_TotalBytes(XMk_dot_product *InstancePtr) {
+    Xil_AssertNonvoid(InstancePtr != NULL);
+    Xil_AssertNonvoid(InstancePtr->IsReady == XIL_COMPONENT_IS_READY);
+
+    return (XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_2_HIGH - XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_2_BASE + 1);
+}
+
+u32 XMk_dot_product_Get_Scratchpad_2_BitWidth(XMk_dot_product *InstancePtr) {
+    Xil_AssertNonvoid(InstancePtr != NULL);
+    Xil_AssertNonvoid(InstancePtr->IsReady == XIL_COMPONENT_IS_READY);
+
+    return XMK_DOT_PRODUCT_CONTROL_WIDTH_SCRATCHPAD_2;
+}
+
+u32 XMk_dot_product_Get_Scratchpad_2_Depth(XMk_dot_product *InstancePtr) {
+    Xil_AssertNonvoid(InstancePtr != NULL);
+    Xil_AssertNonvoid(InstancePtr->IsReady == XIL_COMPONENT_IS_READY);
+
+    return XMK_DOT_PRODUCT_CONTROL_DEPTH_SCRATCHPAD_2;
+}
+
+u32 XMk_dot_product_Write_Scratchpad_2_Words(XMk_dot_product *InstancePtr, int offset, word_type *data, int length) {
+    Xil_AssertNonvoid(InstancePtr != NULL);
+    Xil_AssertNonvoid(InstancePtr -> IsReady == XIL_COMPONENT_IS_READY);
+
+    int i;
+
+    if ((offset + length)*4 > (XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_2_HIGH - XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_2_BASE + 1))
+        return 0;
+
+    for (i = 0; i < length; i++) {
+        *(int *)(InstancePtr->Control_BaseAddress + XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_2_BASE + (offset + i)*4) = *(data + i);
+    }
+    return length;
+}
+
+u32 XMk_dot_product_Read_Scratchpad_2_Words(XMk_dot_product *InstancePtr, int offset, word_type *data, int length) {
+    Xil_AssertNonvoid(InstancePtr != NULL);
+    Xil_AssertNonvoid(InstancePtr -> IsReady == XIL_COMPONENT_IS_READY);
+
+    int i;
+
+    if ((offset + length)*4 > (XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_2_HIGH - XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_2_BASE + 1))
+        return 0;
+
+    for (i = 0; i < length; i++) {
+        *(data + i) = *(int *)(InstancePtr->Control_BaseAddress + XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_2_BASE + (offset + i)*4);
+    }
+    return length;
+}
+
+u32 XMk_dot_product_Write_Scratchpad_2_Bytes(XMk_dot_product *InstancePtr, int offset, char *data, int length) {
+    Xil_AssertNonvoid(InstancePtr != NULL);
+    Xil_AssertNonvoid(InstancePtr -> IsReady == XIL_COMPONENT_IS_READY);
+
+    int i;
+
+    if ((offset + length) > (XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_2_HIGH - XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_2_BASE + 1))
+        return 0;
+
+    for (i = 0; i < length; i++) {
+        *(char *)(InstancePtr->Control_BaseAddress + XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_2_BASE + offset + i) = *(data + i);
+    }
+    return length;
+}
+
+u32 XMk_dot_product_Read_Scratchpad_2_Bytes(XMk_dot_product *InstancePtr, int offset, char *data, int length) {
+    Xil_AssertNonvoid(InstancePtr != NULL);
+    Xil_AssertNonvoid(InstancePtr -> IsReady == XIL_COMPONENT_IS_READY);
+
+    int i;
+
+    if ((offset + length) > (XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_2_HIGH - XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_2_BASE + 1))
+        return 0;
+
+    for (i = 0; i < length; i++) {
+        *(data + i) = *(char *)(InstancePtr->Control_BaseAddress + XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_2_BASE + offset + i);
+    }
+    return length;
+}
+
+u32 XMk_dot_product_Get_Scratchpad_3_BaseAddress(XMk_dot_product *InstancePtr) {
+    Xil_AssertNonvoid(InstancePtr != NULL);
+    Xil_AssertNonvoid(InstancePtr->IsReady == XIL_COMPONENT_IS_READY);
+
+    return (InstancePtr->Control_BaseAddress + XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_3_BASE);
+}
+
+u32 XMk_dot_product_Get_Scratchpad_3_HighAddress(XMk_dot_product *InstancePtr) {
+    Xil_AssertNonvoid(InstancePtr != NULL);
+    Xil_AssertNonvoid(InstancePtr->IsReady == XIL_COMPONENT_IS_READY);
+
+    return (InstancePtr->Control_BaseAddress + XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_3_HIGH);
+}
+
+u32 XMk_dot_product_Get_Scratchpad_3_TotalBytes(XMk_dot_product *InstancePtr) {
+    Xil_AssertNonvoid(InstancePtr != NULL);
+    Xil_AssertNonvoid(InstancePtr->IsReady == XIL_COMPONENT_IS_READY);
+
+    return (XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_3_HIGH - XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_3_BASE + 1);
+}
+
+u32 XMk_dot_product_Get_Scratchpad_3_BitWidth(XMk_dot_product *InstancePtr) {
+    Xil_AssertNonvoid(InstancePtr != NULL);
+    Xil_AssertNonvoid(InstancePtr->IsReady == XIL_COMPONENT_IS_READY);
+
+    return XMK_DOT_PRODUCT_CONTROL_WIDTH_SCRATCHPAD_3;
+}
+
+u32 XMk_dot_product_Get_Scratchpad_3_Depth(XMk_dot_product *InstancePtr) {
+    Xil_AssertNonvoid(InstancePtr != NULL);
+    Xil_AssertNonvoid(InstancePtr->IsReady == XIL_COMPONENT_IS_READY);
+
+    return XMK_DOT_PRODUCT_CONTROL_DEPTH_SCRATCHPAD_3;
+}
+
+u32 XMk_dot_product_Write_Scratchpad_3_Words(XMk_dot_product *InstancePtr, int offset, word_type *data, int length) {
+    Xil_AssertNonvoid(InstancePtr != NULL);
+    Xil_AssertNonvoid(InstancePtr -> IsReady == XIL_COMPONENT_IS_READY);
+
+    int i;
+
+    if ((offset + length)*4 > (XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_3_HIGH - XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_3_BASE + 1))
+        return 0;
+
+    for (i = 0; i < length; i++) {
+        *(int *)(InstancePtr->Control_BaseAddress + XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_3_BASE + (offset + i)*4) = *(data + i);
+    }
+    return length;
+}
+
+u32 XMk_dot_product_Read_Scratchpad_3_Words(XMk_dot_product *InstancePtr, int offset, word_type *data, int length) {
+    Xil_AssertNonvoid(InstancePtr != NULL);
+    Xil_AssertNonvoid(InstancePtr -> IsReady == XIL_COMPONENT_IS_READY);
+
+    int i;
+
+    if ((offset + length)*4 > (XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_3_HIGH - XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_3_BASE + 1))
+        return 0;
+
+    for (i = 0; i < length; i++) {
+        *(data + i) = *(int *)(InstancePtr->Control_BaseAddress + XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_3_BASE + (offset + i)*4);
+    }
+    return length;
+}
+
+u32 XMk_dot_product_Write_Scratchpad_3_Bytes(XMk_dot_product *InstancePtr, int offset, char *data, int length) {
+    Xil_AssertNonvoid(InstancePtr != NULL);
+    Xil_AssertNonvoid(InstancePtr -> IsReady == XIL_COMPONENT_IS_READY);
+
+    int i;
+
+    if ((offset + length) > (XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_3_HIGH - XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_3_BASE + 1))
+        return 0;
+
+    for (i = 0; i < length; i++) {
+        *(char *)(InstancePtr->Control_BaseAddress + XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_3_BASE + offset + i) = *(data + i);
+    }
+    return length;
+}
+
+u32 XMk_dot_product_Read_Scratchpad_3_Bytes(XMk_dot_product *InstancePtr, int offset, char *data, int length) {
+    Xil_AssertNonvoid(InstancePtr != NULL);
+    Xil_AssertNonvoid(InstancePtr -> IsReady == XIL_COMPONENT_IS_READY);
+
+    int i;
+
+    if ((offset + length) > (XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_3_HIGH - XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_3_BASE + 1))
+        return 0;
+
+    for (i = 0; i < length; i++) {
+        *(data + i) = *(char *)(InstancePtr->Control_BaseAddress + XMK_DOT_PRODUCT_CONTROL_ADDR_SCRATCHPAD_3_BASE + offset + i);
     }
     return length;
 }
