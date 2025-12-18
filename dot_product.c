@@ -55,7 +55,7 @@ static inline int Get_Result(XMk_dot_product* cfg, int processor) {
   return ret;
 }
 
-#define COPIES 8
+#define COPIES 32
 #define SIZE 1250
 
 extern float baseline_dot_product(float *x, float *y, int size);
@@ -123,7 +123,7 @@ int main() {
     done_time += dtime();
 
     ret = Get_Result(&ex, 0);
-    for (int x=1; x < 8; x++) {
+    for (int x=1; x < COPIES; x++) {
       ret += Get_Result(&ex, x);
     }
 
@@ -131,6 +131,7 @@ int main() {
   }
 
   printf("result: %f\n", (float)(ret) / 65536.0);
+  printf("expected: %d\n", COPIES * SIZE);
 
   float t2 = dtime();
 
