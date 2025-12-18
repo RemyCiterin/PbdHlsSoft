@@ -96,7 +96,7 @@ int main() {
   int B[COPIES][SIZE];
   for (int j=0; j < 100; j++) {
   for (int iter=0; iter < COPIES; iter++) {
-    for (int i=0; i < SIZE; i++) B[iter][i] = 65536 * (iter * SIZE+i);
+    for (int i=0; i < SIZE; i++) B[iter][i] = 1; // 65536 * (iter * SIZE+i);
 
     copy_time -= dtime();
     Write_Vector(&ex, (1+iter) * SIZE, &B[iter][0], SIZE);
