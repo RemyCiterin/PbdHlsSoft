@@ -105,7 +105,7 @@ int main() {
   }
 
   printf("start processing!\n");
-  for (int iter=0; iter < 1300; iter++) { // 250000
+  for (int iter=0; iter < 12500000 / (COPIES * SIZE); iter++) { // 250000
     ready_time -= dtime();
     while (!XMk_dot_product_IsReady(&ex)) {}
     ready_time += dtime();
@@ -126,7 +126,6 @@ int main() {
     for (int x=1; x < COPIES; x++) {
       ret += Get_Result(&ex, x);
     }
-
     //printf("result: %f\n", ret);
   }
 
