@@ -1,4 +1,4 @@
-CFLAGS = -I. -Wno-int-to-pointer-cast -O3 -mfpu=neon -lm
+CFLAGS = -I. -Wno-int-to-pointer-cast -mfpu=neon -lm
 CC = gcc
 
 .PHONY: build
