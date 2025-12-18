@@ -33,7 +33,7 @@
 //u32 XMk_dot_product_Read_Scratchpad_Words(XMk_dot_product *InstancePtr, int offset, word_type *data, int length);
 
 
-static inline void Write_Vector(XMk_dot_product* cfg, int offset, float* vector, int size) {
+static inline void Write_Vector(XMk_dot_product* cfg, int offset, int* vector, int size) {
   XMk_dot_product_Write_Scratchpad_Words(cfg, offset, (word_type*)(vector), size);
 }
 
@@ -49,8 +49,8 @@ static inline void Set_OffsetB(XMk_dot_product* cfg, int processor, int offset) 
   XMk_dot_product_Write_OffsetB_Words(cfg, processor, (word_type*)(&offset), 1);
 }
 
-static inline float Get_Result(XMk_dot_product* cfg, int processor) {
-  float ret;
+static inline int Get_Result(XMk_dot_product* cfg, int processor) {
+  int ret;
   XMk_dot_product_Read_Result_Words(cfg, processor, (word_type*)(&ret), 1);
   return ret;
 }
@@ -81,22 +81,22 @@ int main() {
 
   for (int i=0; i < COPIES; i++) Set_Size(&ex, i, 0);
 
-  float A[SIZE];
+  int A[SIZE];
 
   float t1 = dtime();
-  for (int i=0; i < SIZE; i++) A[i] = 1;
+  for (int i=0; i < SIZE; i++) A[i] = 1 * 65536;
   Write_Vector(&ex, 0, &A[0], SIZE);
 
-  float ret;
+  int ret;
 
   float copy_time = 0;
   float ready_time = 0;
   float done_time = 0;
 
-  float B[COPIES][SIZE];
+  int B[COPIES][SIZE];
   for (int j=0; j < 100; j++) {
   for (int iter=0; iter < COPIES; iter++) {
-    for (int i=0; i < SIZE; i++) B[iter][i] = (float)(iter * SIZE+i);
+    for (int i=0; i < SIZE; i++) B[iter][i] = 65536 * (iter * SIZE+i);
 
     copy_time -= dtime();
     Write_Vector(&ex, (1+iter) * SIZE, &B[iter][0], SIZE);
@@ -130,27 +130,27 @@ int main() {
     //printf("result: %f\n", ret);
   }
 
-  printf("result: %f\n", ret);
+  printf("result: %f\n", (float)(ret) / 65536.0);
 
   float t2 = dtime();
 
-  float t3 = dtime();
-  float result;
-  for (int iter=0; iter < 1300; iter++) {
-    result = 0;
-    for (int i=0; i < COPIES; i++) {
-      result += baseline_dot_product(&A[0], &B[i][0], SIZE);
-    }
-  }
-  float t4 = dtime();
+  //float t3 = dtime();
+  //float result;
+  //for (int iter=0; iter < 1300; iter++) {
+  //  result = 0;
+  //  for (int i=0; i < COPIES; i++) {
+  //    result += baseline_dot_product(&A[0], &B[i][0], SIZE);
+  //  }
+  //}
+  //float t4 = dtime();
 
   printf("total time: %.4f\n", t2 - t1);
   printf("  copy time: %.4f\n", copy_time);
   printf("  ready time: %.4f\n", ready_time);
   printf("  done time: %.4f\n", done_time);
 
-  printf("baseline time: %.4f\n", t4 - t3);
-  printf("  result: %.4f\n", result);
+  //printf("baseline time: %.4f\n", t4 - t3);
+  //printf("  result: %.4f\n", result);
 
   return 0;
 }
