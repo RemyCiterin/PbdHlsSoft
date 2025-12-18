@@ -14,27 +14,17 @@
 
 #include "xmk_dot_product.h"
 
-//void XMk_dot_product_Start(XMk_dot_product *InstancePtr);
-//u32 XMk_dot_product_IsDone(XMk_dot_product *InstancePtr);
-//u32 XMk_dot_product_IsIdle(XMk_dot_product *InstancePtr);
-//u32 XMk_dot_product_IsReady(XMk_dot_product *InstancePtr);
-//void XMk_dot_product_EnableAutoRestart(XMk_dot_product *InstancePtr);
-//void XMk_dot_product_DisableAutoRestart(XMk_dot_product *InstancePtr);
-//
-//u32 XMk_dot_product_Write_OffsetA_Words(XMk_dot_product *InstancePtr, int offset, word_type *data, int length);
-//u32 XMk_dot_product_Read_OffsetA_Words(XMk_dot_product *InstancePtr, int offset, word_type *data, int length);
-//u32 XMk_dot_product_Write_OffsetB_Words(XMk_dot_product *InstancePtr, int offset, word_type *data, int length);
-//u32 XMk_dot_product_Read_OffsetB_Words(XMk_dot_product *InstancePtr, int offset, word_type *data, int length);
-//u32 XMk_dot_product_Write_Size_Words(XMk_dot_product *InstancePtr, int offset, word_type *data, int length);
-//u32 XMk_dot_product_Read_Size_Words(XMk_dot_product *InstancePtr, int offset, word_type *data, int length);
-//u32 XMk_dot_product_Write_Result_Words(XMk_dot_product *InstancePtr, int offset, word_type *data, int length);
-//u32 XMk_dot_product_Read_Result_Words(XMk_dot_product *InstancePtr, int offset, word_type *data, int length);
-//u32 XMk_dot_product_Write_Scratchpad_Words(XMk_dot_product *InstancePtr, int offset, word_type *data, int length);
-//u32 XMk_dot_product_Read_Scratchpad_Words(XMk_dot_product *InstancePtr, int offset, word_type *data, int length);
 
 
 static inline void Write_Vector(XMk_dot_product* cfg, int offset, int* vector, int size) {
-  XMk_dot_product_Write_Scratchpad_Words(cfg, offset, (word_type*)(vector), size);
+  //XMk_dot_product_Write_Scratchpad_Words(cfg, offset, (word_type*)(vector), size);
+  assert(offset % 4 == 0);
+  assert(size % 4 == 0);
+
+  XMk_dot_product_Write_Scratchpad_0_Words(cfg, offset / 4, (word_type*)vector[0*size/4], size / 4);
+  XMk_dot_product_Write_Scratchpad_1_Words(cfg, offset / 4, (word_type*)vector[1*size/4], size / 4);
+  XMk_dot_product_Write_Scratchpad_2_Words(cfg, offset / 4, (word_type*)vector[2*size/4], size / 4);
+  XMk_dot_product_Write_Scratchpad_3_Words(cfg, offset / 4, (word_type*)vector[3*size/4], size / 4);
 }
 
 static inline void Set_Size(XMk_dot_product* cfg, int processor, int size) {
@@ -56,7 +46,7 @@ static inline int Get_Result(XMk_dot_product* cfg, int processor) {
 }
 
 #define COPIES 32
-#define SIZE 1250
+#define SIZE 1248
 
 extern float baseline_dot_product(float *x, float *y, int size);
 
