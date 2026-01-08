@@ -5,6 +5,7 @@
 #include <float.h>
 #include <math.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include "timers_b.h"
 
 #include "arm_neon.h"
@@ -13,8 +14,38 @@
 #define IMGHEIGHT 29
 #define tour 10000
 
-#define SIGMOID(x) (1.7159*tanh(0.66666667*(x)))
-#define DSIGMOID(S) (0.66666667/1.7159*(1.7159+(S))*(1.7159-(S)))
+#define SIGMOID(x) (1.7159*my_tanh(0.66666667*(x)))
+
+float my_tanh(float x) {
+  // tanh(x) = (e^(2x) - 1) / (e^(2x) + 1), using a taylor approximation is not very good for the
+  // negatives values because those polynoms tends to be very different to 0 for the very large
+  // negative values, but I works well for the positive values because
+  //
+  //    (y-1) / (y+1) -------------------> 1
+  //                       y --> +inf
+  //
+  // and
+  //
+  //    taylor(n,x)  ------------------> +inf
+  //    exp(x)       ------------------> +inf
+  //                       x --> +inf
+  //
+  // So I used the symetry tanh(-x) = -tanh(x), and a taylor approximation of exp(x) for the
+  // positives x.
+  //
+  // This approach doesn't generalize well using Neon because armv7-l doesn't implement vdivq_f32
+  bool sign = x > 0;
+
+  x = sign ? 2 * x : - 2  * x;
+  float xx = x * x;
+
+  // Approximation of e^x of degree 4
+  float e_approx = 1 + x + 0.5*xx + 0.1666666666666666*x*xx + 0.0416666666666666*xx*xx;
+
+  float ret = (e_approx-1) / (e_approx+1);
+
+  return sign ? ret : -ret;
+}
 
 void calculateLayer1(float* input, float* Layer1_Neurons_CPU);
 void calculateLayer2(float* Layer1_Neurons_CPU, float* Layer1_Weights_CPU, float* Layer2_Neurons_CPU);
@@ -324,16 +355,31 @@ void calculateLayer3(float* Layer2_Neurons_CPU, float* Layer2_Weights_CPU, float
 }
 
 void calculateLayer4(float* Layer3_Neurons_CPU, float* Layer3_Weights_CPU, float* Layer4_Neurons_CPU){
-    float somme;
     layerTimer4 -= dtime();
     int i, j, k, m;
     productTimer4 -= dtime();
     for( i=0;i<100;i++){
-        somme = Layer3_Weights_CPU[i*(1+50*25)];
-        for( j=0;j<1250;j++)
-            somme += Layer3_Weights_CPU[i*(1+50*25)+1 + j] * Layer3_Neurons_CPU[j];
+        int j = 0;
+        float somme = Layer3_Weights_CPU[i*(1+50*25)];
 
-        Layer4_Neurons_CPU[i] = somme;
+        float32x4_t acc = vmovq_n_f32(0.0);
+        for (j=0; j < 1248; j += 4) {
+          float32x4_t tmp1 = vld1q_f32(&Layer3_Weights_CPU[i*(1+50*25)+1 + j]);
+          float32x4_t tmp2 = vld1q_f32(&Layer3_Neurons_CPU[j]);
+          acc = vaddq_f32(acc, vmulq_f32(tmp1, tmp2));
+        }
+
+        for (; j < 1250; j++) {
+          float lhs = Layer3_Weights_CPU[i*(1+50*25)+1 + j];
+          float rhs = Layer3_Neurons_CPU[j];
+          somme += lhs * rhs;
+        }
+
+        Layer4_Neurons_CPU[i] = somme +
+          vgetq_lane_f32(acc,0) +
+          vgetq_lane_f32(acc,1) +
+          vgetq_lane_f32(acc,2) +
+          vgetq_lane_f32(acc,3);
     }
     productTimer4 += dtime();
 
