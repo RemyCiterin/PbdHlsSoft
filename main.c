@@ -67,7 +67,28 @@ static double sigmoidTimer3 = 0;
 static double productTimer4 = 0;
 static double sigmoidTimer4 = 0;
 
+#define NumImages 10000
+
 int main(int argc, char** argv){
+    char HeaderBuffer[16];
+
+    // The file start by a header of `4` words, then 10000 images of size 28*28 unsigned bytes
+    FILE* ImagesFile = fopen("t10k-images-idx3-ubyte", "rb");
+    if (!ImagesFile) {
+      printf("t10k-images-idx3-ubyte: No such file or directory\n");
+      exit(1);
+    }
+
+    // The file start by a header of `2` words, then the labels as unsigned bytes
+    FILE* LabelsFile = fopen("t10k-labels-idx1-ubyte", "rb");
+    if (!LabelsFile) {
+      printf("t10k-labels-idx1-ubyte: No such file or directory\n");
+      exit(1);
+    }
+
+    // Ignore the headers
+    fread(HeaderBuffer, sizeof(char), 4 * 4, ImagesFile);
+    fread(HeaderBuffer, sizeof(char), 2 * 4, LabelsFile);
 
     float
         Layer1_Weights_CPU[(5*5+1)*6],
@@ -191,8 +212,20 @@ int main(int argc, char** argv){
 
     double global_timer = -dtime();
 
-    int ITER = 100;
+    int CorrectEstimation = 0;
+
+    int ITER = 1000;
     for (int iter=0; iter < ITER; iter++) {
+      // Read one label
+      char Label;
+      fread(&Label, sizeof(char), 1, LabelsFile);
+      char Image[28*28];
+      fread(&Image, sizeof(char), 28*28, ImagesFile);
+
+      for (int i=0; i < 28; i++)
+          for (int j=0; j < 28; j++)
+              Input[i * IMGWIDTH + j] = 1.0 - (float)(Image[i * 28 + j]) / 256.0;
+
       calculateLayer1(Input, Layer1_Neurons_CPU);
       calculateLayer2(Layer1_Neurons_CPU, Layer1_Weights_CPU, Layer2_Neurons_CPU);
       calculateLayer3(Layer2_Neurons_CPU, Layer2_Weights_CPU, Layer3_Neurons_CPU);
@@ -201,9 +234,9 @@ int main(int argc, char** argv){
 
       scoremax = FLT_MIN;
       int indexmax=-1;
-      if (iter == ITER-1) for(i=0;i<10;i++)
+      for(i=0;i<10;i++)
       {
-          printf("%d : %f\n",i,Layer5_Neurons_CPU[i]);
+          if (iter == ITER-1) printf("%d : %f\n",i,Layer5_Neurons_CPU[i]);
           if(Layer5_Neurons_CPU[i]>scoremax)
           {
               scoremax = Layer5_Neurons_CPU[i];
@@ -211,9 +244,14 @@ int main(int argc, char** argv){
           }
       }
 
-      if (iter == ITER-1)
-        printf("Le resultat est : %d \n",indexmax);
+      if (iter == ITER-1) {
+          printf("Le resultat est : %d (label: %d)\n",indexmax,Label);
+      }
+
+      if ((int)Label == indexmax) CorrectEstimation++;
     }
+
+    printf("Final Score: %d / %d\n", CorrectEstimation, ITER);
 
     global_timer += dtime();
 
