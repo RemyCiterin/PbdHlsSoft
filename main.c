@@ -12,7 +12,8 @@
 
 #define IMGWIDTH 29
 #define IMGHEIGHT 29
-#define tour 10000
+
+#define NumImages 1000
 
 #define SIGMOID(x) (1.7159*my_tanh(0.66666667*(x)))
 
@@ -66,8 +67,6 @@ static double sigmoidTimer3 = 0;
 
 static double productTimer4 = 0;
 static double sigmoidTimer4 = 0;
-
-#define NumImages 10000
 
 int main(int argc, char** argv){
     char HeaderBuffer[16];
@@ -214,8 +213,7 @@ int main(int argc, char** argv){
 
     int CorrectEstimation = 0;
 
-    int ITER = 1000;
-    for (int iter=0; iter < ITER; iter++) {
+    for (int iter=0; iter < NumImages; iter++) {
       // Read one label
       char Label;
       fread(&Label, sizeof(char), 1, LabelsFile);
@@ -236,7 +234,7 @@ int main(int argc, char** argv){
       int indexmax=-1;
       for(i=0;i<10;i++)
       {
-          if (iter == ITER-1) printf("%d : %f\n",i,Layer5_Neurons_CPU[i]);
+          if (iter == NumImages-1) printf("%d : %f\n",i,Layer5_Neurons_CPU[i]);
           if(Layer5_Neurons_CPU[i]>scoremax)
           {
               scoremax = Layer5_Neurons_CPU[i];
@@ -244,14 +242,14 @@ int main(int argc, char** argv){
           }
       }
 
-      if (iter == ITER-1) {
+      if (iter == NumImages-1) {
           printf("Le resultat est : %d (label: %d)\n",indexmax,Label);
       }
 
       if ((int)Label == indexmax) CorrectEstimation++;
     }
 
-    printf("Final Score: %d / %d\n", CorrectEstimation, ITER);
+    printf("Final Score: %d / %d\n", CorrectEstimation, NumImages);
 
     global_timer += dtime();
 
