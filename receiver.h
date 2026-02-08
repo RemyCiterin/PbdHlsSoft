@@ -3,4 +3,4 @@
 #include <netinet/in.h>
 #define PORT 17014
 
-int receive_img(char* image, unsigned int size);
+int receive_img(float* image, unsigned int size);

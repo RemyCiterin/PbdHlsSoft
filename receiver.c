@@ -1,9 +1,11 @@
+#include "receiver.h"
 #include <stdio.h>
 #include <strings.h>
 #include <sys/types.h>
 
-int receive_img(char* image, unsigned int size) // assumes square image of size*size pixels
+int receive_img(float* image, unsigned int size) // assumes square image of size*size pixels
 {
+	char received[size*size];
 	int listenfd, len;
 	struct sockaddr_in servaddr, cliaddr;
 	bzero(&servaddr, sizeof(servaddr));
@@ -18,16 +20,17 @@ int receive_img(char* image, unsigned int size) // assumes square image of size*
 	while(1)
 	{
 		len = sizeof(cliaddr);
-		int n = recvfrom(listenfd, image, size, 0, (struct sockaddr*)&cliaddr, &len);
+		int n = recvfrom(listenfd, received, size, 0, (struct sockaddr*)&cliaddr, &len);	//buffer au format 8 bits
 		
 		printf("\n");
 		for(int i = 0; i < size; i++)
 		{
 			for(int j = 0; j < size; j++)
 			{
-				printf("%d,", image[i*size+j]);
+				image[i*size+j] = (float)received[i*size+j];	//cast en float
+				//printf("%d,", received[i*size+j]);
 			}
-			printf("\n");
+			//printf("\n");
 		}
 	}
 	return 0;

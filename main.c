@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "timers_b.h"
+#include "receiver.h"
 
 #include "arm_neon.h"
 
