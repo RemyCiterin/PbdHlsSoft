@@ -13,21 +13,54 @@
 
 #include "xmk_dot_product.h"
 
-// void XMk_dot_product_Start(XMk_dot_product *InstancePtr);
-// u32 XMk_dot_product_IsDone(XMk_dot_product *InstancePtr);
-// u32 XMk_dot_product_IsIdle(XMk_dot_product *InstancePtr);
-// u32 XMk_dot_product_IsReady(XMk_dot_product *InstancePtr);
-//
-// u32 XMk_dot_product_Read_Output_r_Words(XMk_dot_product *InstancePtr, int offset, word_type *data, int length);
-// u32 XMk_dot_product_Write_MatrixA_Words(XMk_dot_product *InstancePtr, int offset, word_type *data, int length);
-// u32 XMk_dot_product_Write_MatrixB_Words(XMk_dot_product *InstancePtr, int offset, word_type *data, int length);
-
 float fixed2float(int fixed) {
   return ((float)fixed) / 65536.0;
 }
 
 int float2fixed(float f) {
   return (int)(f * 65536.0);
+}
+
+// Load a 52 * 160 matrix into the fpga memory
+void load_weights(XMk_dot_product *ex, float *M1) {
+  int m1_buffer[160 * 52];
+
+  for (int i=0; i < 160; i++)
+    for (int j=0; j < 52; j++)
+      m1_buffer[i * 52 + j] = float2fixed(M1[j * 160 + i]);
+
+  assert(XMk_dot_product_Write_MatrixA0_Words(ex, 0, &m1_buffer[32*52*0], 32*52) == 32*52);
+  assert(XMk_dot_product_Write_MatrixA1_Words(ex, 0, &m1_buffer[32*52*1], 32*52) == 32*52);
+  assert(XMk_dot_product_Write_MatrixA2_Words(ex, 0, &m1_buffer[32*52*2], 32*52) == 32*52);
+  assert(XMk_dot_product_Write_MatrixA3_Words(ex, 0, &m1_buffer[32*52*3], 32*52) == 32*52);
+  assert(XMk_dot_product_Write_MatrixA4_Words(ex, 0, &m1_buffer[32*52*4], 32*52) == 32*52);
+}
+
+// M2 must be a 160 * 28 matrix
+// Out must be a 52 * 28 matrix
+void do_matmul(XMk_dot_product *ex, float *M2, float *Out) {
+  int m2_buffer[160 * 28];
+  int out_buffer[52 * 28];
+
+  for (int i=0; i < 160; i++)
+    for (int j=0; j < 28; j++)
+      m2_buffer[i * 28 + j] = float2fixed(M2[i * 28 + j]);
+
+  assert(XMk_dot_product_Write_MatrixB0_Words(ex, 0, &m2_buffer[32*28*0], 32*28) == 32*28);
+  assert(XMk_dot_product_Write_MatrixB1_Words(ex, 0, &m2_buffer[32*28*1], 32*28) == 32*28);
+  assert(XMk_dot_product_Write_MatrixB2_Words(ex, 0, &m2_buffer[32*28*2], 32*28) == 32*28);
+  assert(XMk_dot_product_Write_MatrixB3_Words(ex, 0, &m2_buffer[32*28*3], 32*28) == 32*28);
+  assert(XMk_dot_product_Write_MatrixB4_Words(ex, 0, &m2_buffer[32*28*4], 32*28) == 32*28);
+
+  while (!XMk_dot_product_IsReady(ex)) {}
+  XMk_dot_product_Start(ex);
+  while (!XMk_dot_product_IsDone(ex)) {}
+
+  assert(XMk_dot_product_Read_Output_r_Words(ex, 0, &out_buffer[0], 28*52) == 28*52);
+
+  for (int i=0; i < 52; i++)
+    for (int j=0; j < 28; j++)
+      Out[i * 28 + j] = fixed2float(out_buffer[i * 28 + j]);
 }
 
 extern float baseline_dot_product(float *x, float *y, int size);
@@ -44,26 +77,27 @@ int main() {
     return EXIT_FAILURE;
   }
 
-  cfg = mmap(NULL, 0x100000, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0x40000000);
+  cfg = mmap(NULL, 0x200000, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0x40000000);
 
   printf("mmap done\n");
 
   ex.Control_BaseAddress = (uint32_t)cfg;
   ex.IsReady = 1;
 
-  int M1[52 * 152];
-  int M2[152 * 28];
-  int M3[52 * 28];
+  float M1[52 * 160];
+  float M2[160 * 28];
+  float M3[52 * 28];
 
   for (int i=0; i < 52; i++)
-    for (int j=0; j < 152; j++)
-      M1[i * 152 + j] = rand() % 65536;
+    for (int j=0; j < 160; j++)
+      M1[i * 160 + j] = (float)(rand() % 65536) / 65536;
 
-  for (int i=0; i < 152; i++)
+  for (int i=0; i < 160; i++)
     for (int j=0; j < 28; j++)
-      M2[i * 28 + j] = rand() % 65536;
+      M2[i * 28 + j] = (float)(rand() % 65536) / 65536;
 
-  XMk_dot_product_Write_MatrixA_Words(&ex, 0, M1, 52 * 152);
+
+  load_weights(&ex, M1);
 
   float copy_time = 0;
   float ready_time = 0;
@@ -72,24 +106,8 @@ int main() {
   printf("start processing!\n");
 
   int t1 = dtime();
-  for (int iter=0; iter < 100; iter++) { // 250000
-    copy_time -= dtime();
-    XMk_dot_product_Write_MatrixB_Words(&ex, 0, M2, 28 * 152);
-    copy_time += dtime();
-
-    ready_time -= dtime();
-    while (!XMk_dot_product_IsReady(&ex)) {}
-    ready_time += dtime();
-
-    XMk_dot_product_Start(&ex);
-
-    done_time -= dtime();
-    while (!XMk_dot_product_IsDone(&ex)) {}
-    done_time += dtime();
-
-    copy_time -= dtime();
-    XMk_dot_product_Read_Output_r_Words(&ex, 0, M3, 28*52);
-    copy_time += dtime();
+  for (int iter=0; iter < 100; iter++) {
+    do_matmul(&ex, M2, M3);
   }
 
 
@@ -100,20 +118,23 @@ int main() {
   printf("  done time: %.4f\n", done_time);
   printf("  copy time: %.4f\n", copy_time);
 
-  int num_error = 0;
+  float eps = 0.0001;
+  int err_count = 0;
   for (int i=0; i < 52; i++) {
     for (int j=0; j < 28; j++) {
-      float sum = 0;
+      float sum = 0.0;
 
-      for (int k=0; k < 152; k++) {
-        sum += fixed2float(M1[i*152+k]) * fixed2float(M2[k*28+j]);
+      for (int k=0; k < 160; k++) {
+        sum += M1[i*160+k] * M2[k*28+j];
       }
 
-      //printf("%f %f\n", fixed2float(M3[i*28+j]), sum);
+      if (i < 3 && j < 5) printf("%f %f\n", M3[i*28+j], sum);
+
+      if (sum > M3[i*28+j] + eps || sum < M3[i*28+j] - eps) err_count++;
     }
   }
 
-  //printf("num errors: %d\n", num_error);
+  printf("%d\n", err_count);
 
   return 0;
 }

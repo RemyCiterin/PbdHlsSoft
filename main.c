@@ -10,6 +10,59 @@
 #include "receiver.h"
 
 #include "arm_neon.h"
+#include "xmk_dot_product.h"
+
+#define UseFPGA 1
+
+float fixed2float(int fixed) {
+  return ((float)fixed) / 65536.0;
+}
+
+int float2fixed(float f) {
+  return (int)(f * 65536.0);
+}
+
+// Load a 52 * 160 matrix into the fpga memory
+void load_weights(XMk_dot_product *ex, float *M1) {
+  int m1_buffer[160 * 52];
+
+  for (int i=0; i < 160; i++)
+    for (int j=0; j < 52; j++)
+      m1_buffer[i * 52 + j] = float2fixed(M1[j * 160 + i]);
+
+  assert(XMk_dot_product_Write_MatrixA0_Words(ex, 0, &m1_buffer[32*52*0], 32*52) == 32*52);
+  assert(XMk_dot_product_Write_MatrixA1_Words(ex, 0, &m1_buffer[32*52*1], 32*52) == 32*52);
+  assert(XMk_dot_product_Write_MatrixA2_Words(ex, 0, &m1_buffer[32*52*2], 32*52) == 32*52);
+  assert(XMk_dot_product_Write_MatrixA3_Words(ex, 0, &m1_buffer[32*52*3], 32*52) == 32*52);
+  assert(XMk_dot_product_Write_MatrixA4_Words(ex, 0, &m1_buffer[32*52*4], 32*52) == 32*52);
+}
+
+// M2 must be a 160 * 28 matrix
+// Out must be a 52 * 28 matrix
+void do_matmul(XMk_dot_product *ex, float *M2, float *Out) {
+  int m2_buffer[160 * 28];
+  int out_buffer[52 * 28];
+
+  for (int i=0; i < 160; i++)
+    for (int j=0; j < 28; j++)
+      m2_buffer[i * 28 + j] = float2fixed(M2[i * 28 + j]);
+
+  assert(XMk_dot_product_Write_MatrixB0_Words(ex, 0, &m2_buffer[32*28*0], 32*28) == 32*28);
+  assert(XMk_dot_product_Write_MatrixB1_Words(ex, 0, &m2_buffer[32*28*1], 32*28) == 32*28);
+  assert(XMk_dot_product_Write_MatrixB2_Words(ex, 0, &m2_buffer[32*28*2], 32*28) == 32*28);
+  assert(XMk_dot_product_Write_MatrixB3_Words(ex, 0, &m2_buffer[32*28*3], 32*28) == 32*28);
+  assert(XMk_dot_product_Write_MatrixB4_Words(ex, 0, &m2_buffer[32*28*4], 32*28) == 32*28);
+
+  while (!XMk_dot_product_IsReady(ex)) {}
+  XMk_dot_product_Start(ex);
+  while (!XMk_dot_product_IsDone(ex)) {}
+
+  assert(XMk_dot_product_Read_Output_r_Words(ex, 0, &out_buffer[0], 28*52) == 28*52);
+
+  for (int i=0; i < 52; i++)
+    for (int j=0; j < 28; j++)
+      Out[i * 28 + j] = fixed2float(out_buffer[i * 28 + j]);
+}
 
 #define IMGWIDTH 29
 #define IMGHEIGHT 29
@@ -51,7 +104,7 @@ float my_tanh(float x) {
 
 void calculateLayer1(float* input, float* Layer1_Neurons_CPU);
 void calculateLayer2(float* Layer1_Neurons_CPU, float* Layer1_Weights_CPU, float* Layer2_Neurons_CPU);
-void calculateLayer3(float* Layer2_Neurons_CPU, float* Layer2_Weights_CPU, float* Layer3_Neurons_CPU);
+void calculateLayer3(XMk_dot_product*, float* Layer2_Neurons_CPU, float* Layer2_Weights_CPU, float* Layer3_Neurons_CPU);
 void calculateLayer4(float* Layer3_Neurons_CPU, float* Layer3_Weights_CPU, float* Layer4_Neurons_CPU);
 void calculateLayer5(float* Layer4_Neurons_CPU, float* Layer4_Weights_CPU, double* Layer5_Neurons_CPU);
 
@@ -70,6 +123,21 @@ static double productTimer4 = 0;
 static double sigmoidTimer4 = 0;
 
 int main(int argc, char** argv){
+    XMk_dot_product ex;
+
+    volatile void* cfg;
+    int fd;
+
+    if((fd = open("/dev/mem", O_RDWR)) < 0) {
+      perror("open");
+      return EXIT_FAILURE;
+    }
+
+    cfg = mmap(NULL, 0x200000, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0x40000000);
+
+    ex.Control_BaseAddress = (uint32_t)cfg;
+    ex.IsReady = 1;
+
     char HeaderBuffer[16];
 
     // The file start by a header of `4` words, then 10000 images of size 28*28 unsigned bytes
@@ -210,6 +278,14 @@ int main(int argc, char** argv){
 
     InitHostMem(Layer1_Weights_CPU,Layer2_Weights_CPU,Layer3_Weights_CPU,Layer4_Weights_CPU);
 
+    float M1[52 * 160] = {0};
+    for (int filter=0; filter < 50; filter++)
+      for (int channel=0; channel < 6; channel++)
+        for (int m=0; m < 5; m++)
+          for (int n=0; n < 5; n++)
+            M1[filter * 160 + 25*channel+5*m+n] = Layer2_Weights_CPU[26*6*filter+1+6*(n+5*m)+channel];
+    load_weights(&ex, M1);
+
     double global_timer = -dtime();
 
     int CorrectEstimation = 0;
@@ -227,7 +303,7 @@ int main(int argc, char** argv){
 
       calculateLayer1(Input, Layer1_Neurons_CPU);
       calculateLayer2(Layer1_Neurons_CPU, Layer1_Weights_CPU, Layer2_Neurons_CPU);
-      calculateLayer3(Layer2_Neurons_CPU, Layer2_Weights_CPU, Layer3_Neurons_CPU);
+      calculateLayer3(&ex, Layer2_Neurons_CPU, Layer2_Weights_CPU, Layer3_Neurons_CPU);
       calculateLayer4(Layer3_Neurons_CPU, Layer3_Weights_CPU, Layer4_Neurons_CPU);
       calculateLayer5(Layer4_Neurons_CPU, Layer4_Weights_CPU, Layer5_Neurons_CPU);
 
@@ -295,7 +371,7 @@ void calculateLayer2(float* Layer1_Neurons_CPU, float* Layer1_Weights_CPU, float
     layerTimer2 += dtime();
 }
 
-void calculateLayer3(float* Layer2_Neurons_CPU, float* Layer2_Weights_CPU, float* Layer3_Neurons_CPU){
+void calculateLayer3(XMk_dot_product* ex, float* Layer2_Neurons_CPU, float* Layer2_Weights_CPU, float* Layer3_Neurons_CPU){
     float somme;
     layerTimer3 -= dtime();
     int i,j,k,m,n;
@@ -323,8 +399,21 @@ void calculateLayer3(float* Layer2_Neurons_CPU, float* Layer2_Weights_CPU, float
 
     convolutionTimer3 -= dtime();
 
+#ifdef UseFPGA
+    float M2[160 * 28] = {0};
+    for (int channel=0; channel < 6; channel++)
+      for (int j=0; j < 5; j++)
+        for (int k=0; k < 5; k++)
+          for (int n=0; n < 5; n++)
+            for (int m=0; m < 5; m++)
+              M2[(25*channel+5*m+n)*28+5*j+k] = Layer2_Neurons_CPU[13*13*channel+13*(2*j+m)+2*k+n];
+
+    // Zero result matrix
+    float M3[52*28] = {0};
+    do_matmul(ex, M2, M3);
+#else
     // Initialize first matrix
-    float M1[52][152] = {{0}};
+    float M1[52][160] = {{0}};
     for (int filter=0; filter < 50; filter++)
       for (int channel=0; channel < 6; channel++)
         for (int m=0; m < 5; m++)
@@ -332,7 +421,7 @@ void calculateLayer3(float* Layer2_Neurons_CPU, float* Layer2_Weights_CPU, float
             M1[filter][25*channel+5*m+n] = Layer2_Weights_CPU[26*6*filter+1+6*(n+5*m)+channel];
 
     // Initialize second matrix
-    float M2[152][28] = {{0}};
+    float M2[160][28] = {{0}};
     for (int channel=0; channel < 6; channel++)
       for (int j=0; j < 5; j++)
         for (int k=0; k < 5; k++)
@@ -378,6 +467,7 @@ void calculateLayer3(float* Layer2_Neurons_CPU, float* Layer2_Weights_CPU, float
         }
       }
     }
+#endif
     convolutionTimer3 += dtime();
 
     sigmoidTimer3 -= dtime();
@@ -385,8 +475,13 @@ void calculateLayer3(float* Layer2_Neurons_CPU, float* Layer2_Weights_CPU, float
     for (int filter=0; filter < 50;filter++)
         for(int j=0;j<5;j++)
             for(int k=0;k<5;k++)
+#ifdef UseFPGA
+                Layer3_Neurons_CPU[5*5*filter+5*j+k] =
+                  (float) SIGMOID(Layer2_Weights_CPU[26*6*filter] + M3[filter * 28 + 5*j+k]);
+#else
                 Layer3_Neurons_CPU[5*5*filter+5*j+k] =
                   (float) SIGMOID(Layer2_Weights_CPU[26*6*filter] + M3[filter][5*j+k]);
+#endif
     sigmoidTimer3 += dtime();
     layerTimer3 += dtime();
 }
