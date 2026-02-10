@@ -3,8 +3,7 @@ CC = gcc
 
 .PHONY: build
 build:
-	gcc main.c timers_b.c fonctions_ES.c xmk_dot_product.c \
-		-mfpu=neon -I. -o main -lm -O3
+	gcc main.c timers_b.c fonctions_ES.c xmk_dot_product.c $(CFLAGS)
 	./main
 
 
