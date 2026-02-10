@@ -10,7 +10,7 @@ build:
 
 .PHONY: dot_product
 dot_product: dot_product.o baseline.o xmk_dot_product.o timers_b.o
-	gcc dot_product.o baseline.o xmk_dot_product.o timers_b.o -lgcc -o dot_product
+	gcc dot_product.o baseline.o xmk_dot_product.o timers_b.o -lgcc -o dot_product -O3
 	./dot_product
 
 clean:

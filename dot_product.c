@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -14,54 +13,22 @@
 
 #include "xmk_dot_product.h"
 
+// void XMk_dot_product_Start(XMk_dot_product *InstancePtr);
+// u32 XMk_dot_product_IsDone(XMk_dot_product *InstancePtr);
+// u32 XMk_dot_product_IsIdle(XMk_dot_product *InstancePtr);
+// u32 XMk_dot_product_IsReady(XMk_dot_product *InstancePtr);
+//
+// u32 XMk_dot_product_Read_Output_r_Words(XMk_dot_product *InstancePtr, int offset, word_type *data, int length);
+// u32 XMk_dot_product_Write_MatrixA_Words(XMk_dot_product *InstancePtr, int offset, word_type *data, int length);
+// u32 XMk_dot_product_Write_MatrixB_Words(XMk_dot_product *InstancePtr, int offset, word_type *data, int length);
 
-static void zero_scratchpad(XMk_dot_product *cfg) {
-  int buffer[25000];
-
-  XMk_dot_product_Write_Scratchpad_0_Words(cfg, 0, (word_type*)(&buffer[0]), 25000);
-  XMk_dot_product_Write_Scratchpad_1_Words(cfg, 0, (word_type*)(&buffer[0]), 25000);
-  XMk_dot_product_Write_Scratchpad_2_Words(cfg, 0, (word_type*)(&buffer[0]), 25000);
-  XMk_dot_product_Write_Scratchpad_3_Words(cfg, 0, (word_type*)(&buffer[0]), 25000);
+float fixed2float(int fixed) {
+  return ((float)fixed) / 65536.0;
 }
 
-static inline void Write_Vector(XMk_dot_product* cfg, int offset, int* vector, int size) {
-  assert(offset % 4 == 0);
-  assert(size % 4 == 0);
-
-  //XMk_dot_product_Write_Scratchpad_0_Words(cfg, offset/4, (word_type*)(&vector[0*size/4]), size/4);
-  //XMk_dot_product_Write_Scratchpad_1_Words(cfg, offset/4, (word_type*)(&vector[1*size/4]), size/4);
-  //XMk_dot_product_Write_Scratchpad_2_Words(cfg, offset/4, (word_type*)(&vector[2*size/4]), size/4);
-  //XMk_dot_product_Write_Scratchpad_3_Words(cfg, offset/4, (word_type*)(&vector[3*size/4]), size/4);
-
-  int off = offset / 4;
-  for (int i=0; i < size; i += 4) {
-    XMk_dot_product_Write_Scratchpad_0_Words(cfg, i+off, (word_type*)(&vector[i+0]), 1);
-    XMk_dot_product_Write_Scratchpad_1_Words(cfg, i+off, (word_type*)(&vector[i+1]), 1);
-    XMk_dot_product_Write_Scratchpad_2_Words(cfg, i+off, (word_type*)(&vector[i+2]), 1);
-    XMk_dot_product_Write_Scratchpad_3_Words(cfg, i+off, (word_type*)(&vector[i+3]), 1);
-  }
+int float2fixed(float f) {
+  return (int)(f * 65536.0);
 }
-
-static inline void Set_Size(XMk_dot_product* cfg, int processor, int size) {
-  XMk_dot_product_Write_Size_Words(cfg, processor, (word_type*)(&size), 1);
-}
-
-static inline void Set_OffsetA(XMk_dot_product* cfg, int processor, int offset) {
-  XMk_dot_product_Write_OffsetA_Words(cfg, processor, (word_type*)(&offset), 1);
-}
-
-static inline void Set_OffsetB(XMk_dot_product* cfg, int processor, int offset) {
-  XMk_dot_product_Write_OffsetB_Words(cfg, processor, (word_type*)(&offset), 1);
-}
-
-static inline int Get_Result(XMk_dot_product* cfg, int processor) {
-  int ret;
-  XMk_dot_product_Read_Result_Words(cfg, processor, (word_type*)(&ret), 1);
-  return ret;
-}
-
-#define COPIES 32
-#define SIZE 1248
 
 extern float baseline_dot_product(float *x, float *y, int size);
 
@@ -84,41 +51,35 @@ int main() {
   ex.Control_BaseAddress = (uint32_t)cfg;
   ex.IsReady = 1;
 
-  zero_scratchpad(&ex);
-  for (int i=0; i < COPIES; i++) Set_Size(&ex, i, 0);
+  int M1[52 * 152];
+  int M2[152 * 28];
+  int M3[52 * 28];
 
-  int A[SIZE];
+  for (int i=0; i < 52; i++)
+    for (int j=0; j < 152; j++)
+      M1[i * 152 + j] = rand() % 65536;
 
-  float t1 = dtime();
-  for (int i=0; i < SIZE; i++) A[i] = 65536 / 100;
-  Write_Vector(&ex, 0, &A[0], SIZE);
+  for (int i=0; i < 152; i++)
+    for (int j=0; j < 28; j++)
+      M2[i * 28 + j] = rand() % 65536;
 
-  float ret;
+  XMk_dot_product_Write_MatrixA_Words(&ex, 0, M1, 52 * 152);
 
   float copy_time = 0;
   float ready_time = 0;
   float done_time = 0;
 
-  int B[COPIES][SIZE];
-  for (int iter=0; iter < COPIES; iter++) {
-    for (int i=0; i < SIZE; i++) B[iter][i] = 65536; // 65536 * (iter * SIZE+i);
-
-    copy_time -= dtime();
-    Write_Vector(&ex, (1+iter) * SIZE, &B[iter][0], SIZE);
-    copy_time += dtime();
-  }
-
   printf("start processing!\n");
-  for (int iter=0; iter < 12500000 / (COPIES * SIZE); iter++) { // 250000
+
+  int t1 = dtime();
+  for (int iter=0; iter < 100; iter++) { // 250000
+    copy_time -= dtime();
+    XMk_dot_product_Write_MatrixB_Words(&ex, 0, M2, 28 * 152);
+    copy_time += dtime();
+
     ready_time -= dtime();
     while (!XMk_dot_product_IsReady(&ex)) {}
     ready_time += dtime();
-
-    for (int x=0; x < COPIES; x++) {
-      Set_OffsetA(&ex, x, 0);
-      Set_OffsetB(&ex, x, SIZE * (1+x));
-      Set_Size(&ex, x, SIZE);
-    }
 
     XMk_dot_product_Start(&ex);
 
@@ -126,35 +87,33 @@ int main() {
     while (!XMk_dot_product_IsDone(&ex)) {}
     done_time += dtime();
 
-    ret = (float)(Get_Result(&ex, 0)) / 65536.0;
-    for (int x=1; x < COPIES; x++) {
-      ret += (float)(Get_Result(&ex, x)) / 65536.0;
-    }
-    //printf("result: %f\n", ret);
+    copy_time -= dtime();
+    XMk_dot_product_Read_Output_r_Words(&ex, 0, M3, 28*52);
+    copy_time += dtime();
   }
 
-  printf("result: %f\n", ret);
-  printf("expected: %d\n", COPIES * SIZE);
 
   float t2 = dtime();
 
-  //float t3 = dtime();
-  //float result;
-  //for (int iter=0; iter < 1300; iter++) {
-  //  result = 0;
-  //  for (int i=0; i < COPIES; i++) {
-  //    result += baseline_dot_product(&A[0], &B[i][0], SIZE);
-  //  }
-  //}
-  //float t4 = dtime();
-
   printf("total time: %.4f\n", t2 - t1);
-  printf("  copy time: %.4f\n", copy_time);
   printf("  ready time: %.4f\n", ready_time);
   printf("  done time: %.4f\n", done_time);
+  printf("  copy time: %.4f\n", copy_time);
 
-  //printf("baseline time: %.4f\n", t4 - t3);
-  //printf("  result: %.4f\n", result);
+  int num_error = 0;
+  for (int i=0; i < 52; i++) {
+    for (int j=0; j < 28; j++) {
+      float sum = 0;
+
+      for (int k=0; k < 152; k++) {
+        sum += fixed2float(M1[i*152+k]) * fixed2float(M2[k*28+j]);
+      }
+
+      //printf("%f %f\n", fixed2float(M3[i*28+j]), sum);
+    }
+  }
+
+  //printf("num errors: %d\n", num_error);
 
   return 0;
 }
