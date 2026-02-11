@@ -162,15 +162,16 @@ On other layers that don't rely as much on the memory system, we see up to a 32.
 As we've seen, the execution is really slow and can easily be improved first by allowing the compiler to use aggressive optimizations.
 Using -O3 option, we get the following results : 
 
-| layer  | Ryzen 7840HS | Zybo Z7   | ratio |
-| :----- | :----------- | :-------- | :---- |
-| init   | 0.338411     | 16.261901 | 48.05 |
-| Layer1 | 0.004810     | 0.137579  | 28.60 |
-| Layer2 | 0.188852     | 6.246568  | 33.07 |
-| Layer3 | 1.138083     | 21.401608 | 18.80 |
-| Layer4 | 0.774708     | 22.229725 | 28.69 |
-| Layer5 | 0.009700     | 0.212412  | 21.89 |
-| global | 2.454564     | 66.489793 | 27.08 |
+| layer  | Ryzen 7840HS O0 | Zybo Z7 O0 | ratio R -> Z O0 | Ryzen O3 | Zybo O3   | Ratio R -> Z O3 | Zybo optimized O3 | ratio Z -> Z O3 |
+| :----- | :-------------- | :--------- | :-------------- | :------- | :-------- | :-------------- | :---------------- | :-------------- |
+| init   | 0.347915        | 16.537004  | 47.53           | 0.338411 | 16,261901 | 48.05           | -                 | -               |
+| Layer1 | 0.004505        | 0.129045   | 28.64           | 0.00481  | 0.137579  | 28.60           | 0.065412          | 0.48            |
+| Layer2 | 0.767018        | 25.224844  | 32.88           | 0.188852 | 6.246568  | 33.07           | 3.878206          | 0.62            |
+| Layer3 | 4.87373         | 143.864549 | 29.51           | 1.138083 | 21.401608 | 18.80           | 11.179308         | 0.52            |
+| Layer4 | 3.107407        | 112.462388 | 36.19           | 0.774708 | 22.229725 | 28.69           | 11.214924         | 0.50            |
+| Layer5 | 0.029057        | 0.581014   | 19.99           | 0.0097   | 0.212412  | 21.89           | 0.175986          | 0.83            |
+| global | 9.129632        | 298.798844 | 32.72           | 2.454564 | 66.489793 | 27.08           | 27.029240         | 0.41            |
+
 
 We can see first that the init stage doesn't change much, indicating that the bottleneck at this stage is the memory system, in both cases.  
 However, while we see improvements on both systems, the improvement is slightly better on the Zybo Z7 system, as the ratio goes down to ~ x27, compared to ~ x32.7 in O0.
@@ -261,17 +262,25 @@ float my_tanh(float x)
 ```
 
 ### Replacing convolutions by matrix multiplications in layers 3 and 4
+// Convolutions : moins de calculs mais accès mémoire pas contigus ==> memory bound ==> passage en produits de matrice ==> plus d'opérations mais plus contigu ==> opti par SIMD possible
+
+
 Layers 3 and 4 essentially perform a convolution product over large matrices, which is quite slow algorithmically (Time complexity of O(MNmn) with M, N the height and width of the input matrix, m, n the height and width of the convolution mask).  
 To improve on this aspect, we modified the code to instead do matrix multiplication, which after initialization gives a worst time complexity of O(n^3), with n the size of the matrix.  
 In our more specific case, for the layer3, the original algorithm performs nested loops of 50, 5, 5, 5, 5, and 5 iterations (or 31250 iterations) of multiply-accumulate operations (not counting index computation).  
-The matrix product version on the other hand, performs two nested loops of 6, 5, 5, 5, 5 (3750 iterations each, 7500 total) of 1 assignation (matrix initialization) and a nested loop of 52, 152 (7904) iterations, each iteration doing 4 multiplications and one addition (5 operations).  
+The matrix product version on the other hand, performs two nested loops of 6, 5, 5, 5, 5 (3750 iterations each, 7500 total) of 1 assignation (matrix initialization) and a nested loop of 52, 152, 28 (7904) iterations, each iteration doing 4 multiplications and one addition (5 operations).  
 Overall, we went from doing 31250 x 6 x 2 = 375000 operations (additions and multiplications) to just 7904 x 5 = 39520 operations per call of the layer3.  
 
-As for layer 4, the original algorithm performs nested loops of 100, 50, 5, 5 (125000) iterations of one addition and one multiplication, so 250000 operations per call.  
-Our modified version performs a nested loop of 100, 1248 + 1250 (249800) iterations of one addition and one multiplication, so 499 600 operations per call (still not counting index calculation), so technically a worse situation.
 
-However, if we now count index calculations, the original algorithm performs at the deepest level of the loop 13 operations (adds/mults) to calculate the indices of the right hand of the operation, which combined to our 2 "real" operations gives 125000 x 15 = 1875000 operations per call.  
-Our version on the other hand only requires 10 more operations, bringing the total to 249800 x 12 = 2997600 operations per call, which is still worse than the previous implementation, but less so.
+110656
+
+// Layer 4 : memory bound car tient pas sur cache L1 ==> utiliser Neon aide pas beaucoup
+
+As for layer 4, the original algorithm performs nested loops of 100, 50, 5, 5 (125000) iterations of one addition and one multiplication, so 250000 operations per call.  
+Our modified version performs a nested loop of 100, 1250 (125000) iterations of one addition and one multiplication, so 250 000 operations per call (still not counting index calculation), so technically a worse situation.
+
+~~However, if we now count index calculations, the original algorithm performs at the deepest level of the loop 13 operations (adds/mults) to calculate the indices of the right hand of the operation, which combined to our 2 "real" operations gives 125000 x 15 = 1875000 operations per call.
+Our version on the other hand only requires 10 more operations, bringing the total to 249800 x 12 = 2997600 operations per call, which is still worse than the previous implementation, but less so.~~
 
 ### Fully utilizing the CPU capabilities
 As we are effectively using an ARM cpu with an embedded linux distribution, we are able to use its SIMD modules through ARM Neon Intrinsics, more specifically, 128-bits wide operations, or up to 4 floating point operations per cycle.  
