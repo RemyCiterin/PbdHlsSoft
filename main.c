@@ -12,7 +12,7 @@
 #include "arm_neon.h"
 #include "xmk_dot_product.h"
 
-#define UseFPGA 1
+#define UseFPGA 0
 
 float fixed2float(int fixed) {
   return ((float)fixed) / 65536.0;
@@ -67,7 +67,7 @@ void do_matmul(XMk_dot_product *ex, float *M2, float *Out) {
 #define IMGWIDTH 29
 #define IMGHEIGHT 29
 
-#define NumImages 1000
+#define NumImages 10000
 
 #define SIGMOID(x) (1.7159*my_tanh(0.66666667*(x)))
 
@@ -399,7 +399,7 @@ void calculateLayer3(XMk_dot_product* ex, float* Layer2_Neurons_CPU, float* Laye
 
     convolutionTimer3 -= dtime();
 
-#ifdef UseFPGA
+#if UseFPGA
     float M2[160 * 28] = {0};
     for (int channel=0; channel < 6; channel++)
       for (int j=0; j < 5; j++)
@@ -475,7 +475,7 @@ void calculateLayer3(XMk_dot_product* ex, float* Layer2_Neurons_CPU, float* Laye
     for (int filter=0; filter < 50;filter++)
         for(int j=0;j<5;j++)
             for(int k=0;k<5;k++)
-#ifdef UseFPGA
+#if UseFPGA
                 Layer3_Neurons_CPU[5*5*filter+5*j+k] =
                   (float) SIGMOID(Layer2_Weights_CPU[26*6*filter] + M3[filter * 28 + 5*j+k]);
 #else
